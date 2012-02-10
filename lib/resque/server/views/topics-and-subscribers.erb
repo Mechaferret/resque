@@ -1,0 +1,57 @@
+<%# @subtabs = resque.queues unless partial? || params[:id].nil? %>
+
+<% if queue = params[:id] %>
+
+  <h1>Pending jobs on <span class='hl'><%= queue %></span></h1>
+  <form method="POST" action="<%=u "/queues/#{queue}/remove" %>" class='remove-queue'>
+    <input type='submit' name='' value='Remove Queue' onclick='return confirm("Are you absolutely sure? This cannot be undone.");' />
+  </form>
+  <p class='sub'>Showing <%= start = params[:start].to_i %> to <%= start + 20 %> of <b><%=size = resque.size(queue)%></b> jobs</p>
+  <table class='jobs'>
+    <tr>
+      <th>Class</th>
+      <th>Args</th>
+    </tr>
+    <% for job in (jobs = resque.peek(queue, start, 20)) %>
+    <tr>
+      <td class='class'><%= job['class'] %></td>
+      <td class='args'><%=h job['args'].inspect %></td>
+    </tr>
+    <% end %>
+    <% if jobs.empty? %>
+    <tr>
+      <td class='no-data' colspan='2'>There are no pending jobs in this queue</td>
+    </tr>
+    <% end %>
+  </table>
+  <%= partial :next_more, :start => start, :size => size %>
+<% else %>
+
+  <h1 class='wi'>Topics</h1>
+  <% if topics.empty?%>
+    This namespace is not being used as a publish/subscribe broker/exchange.
+  <% else %>
+  <p class='intro'>The list below contains all the registered topics and the subscribers for each topic.</p>
+  <table class='topics'>
+    <tr>
+      <th>Topic</th>
+      <th>Subscription Count</th>
+      <th>Subscribers</th>
+    </tr>
+    <% for topic in topics.sort_by { |q| q.to_s } %>
+    <tr>
+      <td class='topics'><%= topic %></td>
+      <td class='count'><%= redis_get_size "#{topic}_subscribers" %></td>
+      <td>
+        <table>
+        <% Resque.redis.smembers("#{topic}_subscribers").each do |subscriber| %>
+          <%= partial 'subscriber', :subscriber=> Resque.decode(subscriber), :topic=>topic%>
+        <% end %>
+        </table>
+      </td>
+    </tr>
+    <% end %>
+  </table>
+  <% end %>
+
+<% end %>

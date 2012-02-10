@@ -48,7 +48,7 @@ module Resque
       end
 
       def tab(name)
-        dname = name.to_s.downcase
+        dname = name.to_s.downcase.gsub(' ','-')
         path = url_path(dname)
         "<li #{class_if_current(path)}><a href='#{path}'>#{name}</a></li>"
       end
@@ -57,6 +57,10 @@ module Resque
         Resque::Server.tabs
       end
 
+      def topics
+        Resque::Server.topics
+      end
+      
       def resque_namespace_options
         Resque::Server.resque_namespace_options
       end
@@ -248,6 +252,21 @@ module Resque
       redirect url_path(:overview)
     end
     
+    get '/topics-and-subscribers' do
+      show 'topics-and-subscribers'
+    end
+    
+    get '/topics/unsubscribe/:stopic/:sclass/:snamespace' do
+      subscriber = {:class=>params[:sclass], :namespace=>params[:snamespace]}.to_json
+      Resque.redis.srem("#{params[:stopic]}_subscribers", subscriber)
+      show 'topics-and-subscribers'      
+    end
+    
+    get '/subscriber_queue/:stopic/:snamespace' do
+      Resque.redis.namespace = params[:snamespace]
+      redirect u("queues/fanout:#{params[:stopic]}")
+    end
+
     def resque
       Resque
     end
@@ -265,11 +284,19 @@ module Resque
     end
     
     def self.tabs
-      @tabs ||= ["Overview", "Working", "Failed", "Queues", "Workers", "Stats"]
+      @tabs ||= ["Overview", "Working", "Failed", "Queues", "Workers", "Stats"] + self.topic_tab
     end
     
     def self.resque_namespace_options
       self.redis.keys('*queues').collect {|nc| nc.gsub(':queues', '')}
+    end
+    
+    def self.topics
+      Resque.redis.keys('*_subscribers').collect {|t| t.gsub('_subscribers','')}
+    end
+    
+    def self.topic_tab
+      self.topics.empty? ? [] : ['Topics and Subscribers']
     end
     
   end

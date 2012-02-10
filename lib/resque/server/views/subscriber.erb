@@ -1,0 +1,6 @@
+<tr class='subscriber'>
+  <td class='subscriber'><%=subscriber['class']%></td>
+  <td class='subscriber'><%=subscriber['namespace']%></td>
+  <td class='subscriber'><a href='<%=u "subscriber_queue/#{topic}/#{subscriber['namespace']}" %>'>Message queue</a>
+  <td class='subscriber'><a href='<%= u "topics/unsubscribe/#{topic}/#{subscriber['class']}/#{subscriber['namespace']}"%>'>Unsubscribe</a><br/></td>
+</tr>
