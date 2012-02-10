@@ -57,6 +57,10 @@ module Resque
         Resque::Server.tabs
       end
 
+      def resque_namespace_options
+        Resque::Server.resque_namespace_options
+      end
+
       def redis_get_size(key)
         case Resque.redis.type(key)
         when 'none'
@@ -237,12 +241,36 @@ module Resque
       stats.join "\n"
     end
 
+    post '/change_namespace' do
+      puts "changing namespace to #{params[:namespace]}"
+      Resque.redis.namespace = params[:namespace]
+      puts "redis is #{Resque.redis.inspect}"
+      redirect url_path(:overview)
+    end
+    
     def resque
       Resque
     end
 
+    def self.redis=(server)
+      host, port = server.split(':')
+      @@redis = Redis.new(:host => host, :port => port,
+        :thread_safe => true)
+    end
+    
+    def self.redis
+      return @@redis if @@redis
+      self.redis = Redis.respond_to?(:connect) ? Redis.connect : "localhost:6379"
+      self.redis
+    end
+    
     def self.tabs
       @tabs ||= ["Overview", "Working", "Failed", "Queues", "Workers", "Stats"]
     end
+    
+    def self.resque_namespace_options
+      self.redis.keys('*queues').collect {|nc| nc.gsub(':queues', '')}
+    end
+    
   end
 end

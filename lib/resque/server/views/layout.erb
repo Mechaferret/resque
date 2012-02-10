@@ -16,9 +16,18 @@
         <%= tab tab_name %>
       <% end %>
     </ul>
-    <% if Resque.redis.namespace != :resque %>
+    <form method='post' action='/change_namespace'>
+    <select id="namespace" name="namespace" class="namespace_select" onchange="$('#namespace_submit').click();">
+      <% resque_namespace_options.each do |nspc| %>
+        <option value='<%=nspc%>' <%= nspc==Resque.redis.namespace ? 'selected' : '' %> ><%=nspc%></option>
+      <% end %>
+    </select>
+    <input type='submit' id="namespace_submit" style="display:none;" value=''>
+    </form>
+    <div class="clear"></div>
+    <% if Resque.redis.namespace != :resque || resque_namespace_options.size>1 %>
       <abbr class="namespace" title="Resque's Redis Namespace">
-       <%= Resque.redis.namespace %>
+       <%= Resque.redis.namespace %>;
       </abbr>
     <% end %>
   </div>

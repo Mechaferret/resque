@@ -16,6 +16,10 @@ body { padding:0; margin:0; }
 .subnav li.current a { background:#fff; font-weight:bold; color:#ce1212;}
 .subnav li a:active { background:#b00909;}
 
+.nav {width:50%; float:left;}
+.namespace_select {float:left;}
+.clear {clear: both}
+
 #main { padding:10px 5%; background:#fff; overflow:hidden; }
 #main .logo { float:right; margin:10px;}
 #main span.hl { background:#efefef; padding:2px;}
